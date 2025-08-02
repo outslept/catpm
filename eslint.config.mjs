@@ -1,146 +1,98 @@
-import eslint from "@eslint/js";
-import tseslint from "typescript-eslint";
-import importPlugin from "eslint-plugin-import";
-import vitest from "@vitest/eslint-plugin";
+import { fileURLToPath, URL } from 'node:url';
 import { includeIgnoreFile } from '@eslint/compat';
-import { fileURLToPath, URL } from "node:url";
+import eslint from '@eslint/js';
+import vitest from '@vitest/eslint-plugin';
+import importPlugin from 'eslint-plugin-import';
+import tseslint from 'typescript-eslint';
 
-const gitignorePath = fileURLToPath(new URL(".gitignore", import.meta.url));
+const gitignorePath = fileURLToPath(new URL('.gitignore', import.meta.url));
 
-export default [
-  includeIgnoreFile(gitignorePath, "Imported .gitignore patterns"),
+export default tseslint.config(
+  includeIgnoreFile(gitignorePath, 'Imported .gitignore patterns'),
 
   eslint.configs.recommended,
 
   ...tseslint.configs.strictTypeChecked,
+
+  ...tseslint.configs.stylisticTypeChecked,
   importPlugin.flatConfigs.recommended,
 
-  vitest.configs.recommended,
-
   {
+    name: 'base-config',
     languageOptions: {
-      ecmaVersion: "latest",
-      sourceType: "module",
+      ecmaVersion: 'latest',
+      sourceType: 'module',
       parserOptions: {
         projectService: true,
         tsconfigRootDir: process.cwd(),
       },
       globals: {
-        process: "readonly",
-        __dirname: "readonly",
-        __filename: "readonly",
-        module: "readonly",
-        require: "readonly",
-        exports: "readonly",
+        process: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
+        exports: 'readonly',
       },
     },
     linterOptions: {
-      reportUnusedDisableDirectives: true,
+      reportUnusedDisableDirectives: 'error',
     },
     rules: {
-      "no-console": ["warn", { allow: ["warn", "error"] }],
-      "no-debugger": "error",
-      "no-implicit-coercion": "error",
-      "no-throw-literal": "error",
-      "prefer-const": ["error", { destructuring: "all" }],
-      "no-var": "error",
-      eqeqeq: ["error", "smart"],
-
-      "import/no-unresolved": "error",
-      "import/no-duplicates": "error",
-      "import/no-self-import": "error",
-      "import/no-cycle": "warn",
-      "import/no-mutable-exports": "error",
-      "import/no-useless-path-segments": ["error", { noUselessIndex: true }],
-      "import/first": "error",
-      "import/newline-after-import": "error",
-      "import/order": [
-        "error",
-        {
-          groups: [
-            "builtin",
-            "external",
-            "internal",
-            "parent",
-            "sibling",
-            "index",
-            "object",
-            "type",
-          ],
-          "newlines-between": "always",
-          alphabetize: { order: "asc", caseInsensitive: true },
-        },
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'import/no-named-as-default-member': 'off',
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
       ],
-
-      "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
-      "@typescript-eslint/consistent-type-exports": "error",
-      "@typescript-eslint/consistent-type-imports": [
-        "error",
-        { prefer: "type-imports", fixStyle: "inline-type-imports" },
+      '@typescript-eslint/explicit-function-return-type': [
+        'warn',
+        { allowExpressions: true, allowHigherOrderFunctions: true },
       ],
-      "@typescript-eslint/no-confusing-void-expression": [
-        "error",
-        { ignoreArrowShorthand: true, ignoreVoidOperator: false },
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
-      "@typescript-eslint/no-floating-promises": ["error", { ignoreVoid: false }],
-      "@typescript-eslint/no-misused-promises": [
-        "error",
-        { checksVoidReturn: { attributes: false } },
-      ],
-      "@typescript-eslint/no-non-null-assertion": "error",
-      "@typescript-eslint/no-throw-literal": "error",
-      "@typescript-eslint/prefer-nullish-coalescing": [
-        "error",
-        { ignoreConditionalTests: true, ignoreMixedLogicalExpressions: true },
-      ],
-      "@typescript-eslint/prefer-optional-chain": "error",
-      "@typescript-eslint/switch-exhaustiveness-check": "error",
     },
     settings: {
-      "import/resolver": {
+      'import/parsers': {
+        '@typescript-eslint/parser': ['.ts', '.tsx', '.d.ts']
+      },
+      'import/resolver': {
         typescript: {
           alwaysTryTypes: true,
-          project: true,
+          project: './tsconfig.json',
+          extensions: ['.ts', '.tsx', '.d.ts', '.js', '.jsx', '.json']
         },
-        node: { extensions: [".js", ".mjs", ".cjs", ".ts", ".cts", ".mts"] },
       },
     },
   },
 
   {
-    files: ["**/*.test.ts", "**/*.spec.ts", "**/__tests__/**/*.ts"],
+    files: ['**/*.js', '**/*.mjs', '**/*.cjs'],
+    extends: [tseslint.configs.disableTypeChecked],
+    name: 'js-files',
+    rules: {
+      '@typescript-eslint/explicit-function-return-type': 'off',
+    },
+  },
+
+  {
+    files: ['**/*.test.ts', '**/*.spec.ts', 'tests/**/*.ts', 'vitest.config.ts'],
+    ...vitest.configs.recommended,
+    name: 'test-files',
     languageOptions: {
       globals: {
         ...vitest.environments.env.globals,
       },
     },
     rules: {
-      "@typescript-eslint/no-explicit-any": "off",
-      "no-console": "off",
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      'no-console': 'off',
     },
   },
-
-  {
-    files: ["**/*.js", "**/*.mjs", "**/*.cjs"],
-    // Disable TS-specific rules for plain JS if desired:
-    rules: {
-      "@typescript-eslint/no-var-requires": "off",
-      "@typescript-eslint/no-require-imports": "off",
-    },
-  },
-
-  // TypeScript-only tweaks
-  {
-    files: ["**/*.ts", "**/*.mts", "**/*.cts"],
-    rules: {
-      "@typescript-eslint/explicit-function-return-type": [
-        "warn",
-        { allowExpressions: true, allowHigherOrderFunctions: true },
-      ],
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
-      ],
-    },
-  },
-];
+);
