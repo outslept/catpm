@@ -18,6 +18,11 @@ export default tseslint.config(
   importPlugin.flatConfigs.recommended,
 
   {
+    ignores: ['bin/**', 'dist/**'],
+    name: 'build-ignores',
+  },
+
+  {
     name: 'base-config',
     languageOptions: {
       ecmaVersion: 'latest',
